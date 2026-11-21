@@ -14,7 +14,7 @@ import {gzipSync} from "node:zlib";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const revision = execFileSync("git",["rev-parse","HEAD"],{cwd:root,encoding:"utf8"}).trim();
 // The trailer is larger than the Site source repository's per-object limit.
-const trailerUrl = "https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/9a2fbd21a3825caddbff8640ca09ce7cf7d5f964/dist/trailer/qua-mot-khuc-cua.mp4";
+const trailerUrl = "https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/95236275ab9835ad210943117a943b3a389ccba9/dist/trailer/qua-mot-khuc-cua.mp4";
 const client = path.join(root,"dist/client");
 const server = path.join(root,"dist/server");
 await mkdir(client,{recursive:true});
