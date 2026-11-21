@@ -13,7 +13,8 @@ import {gzipSync} from "node:zlib";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const revision = execFileSync("git",["rev-parse","HEAD"],{cwd:root,encoding:"utf8"}).trim();
-const trailerPath = "trailer/qua-mot-khuc-cua.mp4";
+// The trailer is larger than the Site source repository's per-object limit.
+const trailerUrl = "https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/1072a84f0056bee22dcaee0fc86cf308992953db/dist/trailer/qua-mot-khuc-cua.mp4";
 const client = path.join(root,"dist/client");
 const server = path.join(root,"dist/server");
 await mkdir(client,{recursive:true});
@@ -28,8 +29,6 @@ try {
 } finally {
   await rm(scratch,{recursive:true,force:true});
 }
-// The public trailer streams from this exact GitHub revision through the Worker.
-await rm(path.join(client,trailerPath));
 await Promise.all([packRoadAssets(client),prepareSightSurfaces(client)]);
 // The Worker serves the original bytes at each public URL.
 async function storeGzip(file) {
@@ -78,7 +77,7 @@ for (const name of await readdir(client)) {
 }
 // Sites accepts a single ES module as its Worker entry point.
 await writeFile(path.join(server,"index.js"),body
-  .replace('import trailerUrl from "./trailer-url.js";',"const trailerUrl = "+JSON.stringify("https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/"+revision+"/dist/"+trailerPath)+";")
+  .replace('import trailerUrl from "./trailer-url.js";',"const trailerUrl = "+JSON.stringify(trailerUrl)+";")
   .replace('import "../dist/road-tile-codec.js";',()=>roadCodec)
   .replace('import departureIds from "./departure-ids.js";',"const departureIds = new Set("+JSON.stringify(departures.map(stop=>stop.id))+");")
   .replace('import pagePaths from "./page-paths.js";',"const pagePaths = new Set("+JSON.stringify(pagePaths)+");")
