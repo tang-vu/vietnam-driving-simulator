@@ -4,7 +4,7 @@ Trên đèo Hải Vân, con đường ôm lấy sườn núi. Qua khúc cua, b�
 
 ViVu3D là game lái xe 3D trên trình duyệt. Bạn có thể khám phá Việt Nam theo cung đường mình chọn, đua tính giờ trong Cúp Bánh Mì hoặc tập sa hình hạng B.
 
-[Xem trailer “Qua một khúc cua” · 36 giây](https://vivu3d.com/trailer/qua-mot-khuc-cua.mp4) · [Tải MP4 1440p, 24 fps](https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/3ecfc4b4b5184836663d1d9b6db2c4dd04eaf476/social/qua-mot-khuc-cua-1440p24.mp4)
+[Xem trailer “Qua một khúc cua” · 36 giây](https://vivu3d.com/trailer/qua-mot-khuc-cua.mp4) · [Tải MP4 1440p, 24 fps](https://raw.githubusercontent.com/tang-vu/vietnam-driving-simulator/8a748c8c156725445c6e74a1536a166b40b0745a/social/qua-mot-khuc-cua-1440p24.mp4)
 
 **[Cầm lái trên đèo Hải Vân](https://vivu3d.com/?pass=deo-hai-van&light=morning)** · [Ghé phố cổ Hội An](https://vivu3d.com/?landmark=nha-co-tan-ky) · [Chọn cung đèo khác](https://vivu3d.com/cung-duong)
 
