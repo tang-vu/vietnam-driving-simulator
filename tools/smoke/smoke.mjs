@@ -131,9 +131,13 @@ async function checkTouchPedals(page) {
     await page.locator('#resume').click();
   }
   const stick=page.locator('[data-touch-stick]'),origin=await point('[data-touch-stick]',1);
-  const radius=(await stick.boundingBox()).width*.30;
+  const radius=(await stick.boundingBox()).width*.42;
   const push=(x,y)=>touch('touchMove',{...origin,x:origin.x+radius*x,y:origin.y-radius*y});
   const chassis = (range)=>{const value=(document.body.classList.contains('journey')?car:cupBody).steer;return value>=range[0]&&value<=range[1];};
+  await touch('touchStart',{...origin,x:origin.x+15,y:origin.y-12});
+  await expectInputs();
+  assert.equal(await page.evaluate(()=>(document.body.classList.contains('journey')?keySet:keys).wheelAxis),0,'Landing off-centre is neutral');
+  await touch('touchEnd');
   await touch('touchStart',origin);
   await expectInputs();
   await push(.05,.55);
@@ -143,11 +147,17 @@ async function checkTouchPedals(page) {
     return input.wheelAxis===0&&input.throttle>.40&&input.throttle<.55;
   });
   await push(.7,1);
-  await page.waitForFunction(chassis,[.56,.75]);
+  await page.waitForFunction(chassis,[.45,.54]);
   await page.waitForFunction(()=>(document.body.classList.contains('journey')?car:cupBody).speed>1);
   await push(-.7,.85);
   await expectInputs('w');
-  await page.waitForFunction(chassis,[-.75,-.56]);
+  await page.waitForFunction(chassis,[-.54,-.45]);
+  await push(.36,1.2);
+  await page.waitForFunction(chassis,[.04,.075]);
+  await push(.72,2.4);
+  await page.waitForFunction(()=>{const input=document.body.classList.contains('journey')?keySet:keys;return input.throttle===1&&input.wheelAxis>.04&&input.wheelAxis<.075;});
+  await push(1.15,1.15);
+  await page.waitForFunction(chassis,[.96,1]);
   await push(0,-1);
   await expectInputs('s');
   await page.waitForFunction(()=>(document.body.classList.contains('journey')?car:cupBody).speed<-.4);

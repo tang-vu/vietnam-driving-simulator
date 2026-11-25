@@ -15,6 +15,7 @@
 #cockpitSettings .steeringStops button {min-height: 36px; padding: 0 5px; border: 0; background: transparent; color: #f4f6ed; font: inherit; cursor: pointer}
 #cockpitSettings .settingsDone {width: 100%; min-height: 44px; margin-top: 4px; background: #d2f477; border: 0; border-radius: 7px; color: #152c29; font: 700 15px system-ui; cursor: pointer}
 #cockpitSettings [data-device=touch] {display: none}
+body:not([data-touch-control=stick]) #cockpitSettings fieldset:has(input[name=stickSensitivity]) {display:none}
 
 
 #cockpitSettings::backdrop {background: #06100ec9}

@@ -22,6 +22,7 @@ function createDriveInput({timedSteering=false}={}) {
   const wheel=timedSteering?document.querySelector('[data-touch-wheel]'):null;
   const stick=timedSteering?document.querySelector('[data-touch-stick]'):null;
   let pad=null, pointerId=null, wheelAxis=null, stickDrive=0, originX=0, originY=0, dragRange=0;
+  let stickPower=1.65;
   const has=key=>pressed(key)||(key==='w'&&stickDrive>0)||(key==='s'&&stickDrive<0);
   let applied=0, latest=0, compressedFrame=false;
   function recordSteering(time) {
@@ -104,12 +105,19 @@ function createDriveInput({timedSteering=false}={}) {
   function movePad(event) {
     const dx=event.clientX-originX;
     if (pad===stick) {
-      const x=dx/dragRange, y=(originY-event.clientY)/dragRange;
-      wheelAxis=stickAxis(x);
-      stickDrive=stickAxis(y);
-      const scale=dragRange/Math.max(1,Math.hypot(x,y));
-      stick.style.setProperty('--stick-x',x*scale+'px');
-      stick.style.setProperty('--stick-y',-y*scale+'px');
+      const dy=originY-event.clientY;
+      // Keep full travel reachable when a thumb starts near a screen edge.
+      const x=dx/Math.max(1,Math.min(dragRange,dx<0?originX:window.innerWidth-originX));
+      const y=dy/Math.max(1,Math.min(dragRange,dy>0?originY:window.innerHeight-originY));
+      // Outside the gate, direction alone sets the mix of throttle and steering.
+      // A diagonal can still request full lock and full power together.
+      const gate=Math.max(1,Math.abs(x),Math.abs(y)), turn=stickAxis(x/gate);
+      wheelAxis=Math.sign(turn)*Math.abs(turn)**stickPower;
+      stickDrive=stickAxis(y/gate);
+      // The thumb is 40% of its base, so 75% of the thumb width reaches the rim.
+      const visualScale=1/Math.max(1,Math.hypot(x,y));
+      stick.style.setProperty('--stick-x',75*x*visualScale+'%');
+      stick.style.setProperty('--stick-y',-75*y*visualScale+'%');
     } else {
       const room=dx<0?originX:window.innerWidth-originX;
       const range=Math.max(1,Math.min(dragRange,room));
@@ -124,6 +132,8 @@ function createDriveInput({timedSteering=false}={}) {
       stick.classList.remove('dragging');
       stick.style.removeProperty('--stick-x');
       stick.style.removeProperty('--stick-y');
+      stick.style.removeProperty('--origin-x');
+      stick.style.removeProperty('--origin-y');
     }
     if (wheel) {
       wheel.parentElement.classList.remove('turning');
@@ -144,8 +154,14 @@ function createDriveInput({timedSteering=false}={}) {
       pad=control;pointerId=event.pointerId;
       const box=control.getBoundingClientRect();
       if (control===stick) {
-        originX=box.left+box.width/2;originY=box.top+box.height/2;
-        dragRange=Math.max(1,box.width*.30);
+        originX=event.clientX;originY=event.clientY;
+        dragRange=Math.max(1,box.width*.42);
+        stickPower=({low:2.2,medium:1.65,high:1})[document.body.dataset.stickSensitivity]??1.65;
+        // Move only the artwork. The touch target stays in its reserved HUD area.
+        const ox=Math.max(-box.left,Math.min(window.innerWidth-box.right,originX-box.left-box.width/2));
+        const oy=Math.max(-box.top,Math.min(window.innerHeight-box.bottom,originY-box.top-box.height/2));
+        stick.style.setProperty('--origin-x',ox+'px');
+        stick.style.setProperty('--origin-y',oy+'px');
         stick.classList.add('dragging');
       } else {
         originX=event.clientX;

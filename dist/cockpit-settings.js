@@ -13,6 +13,7 @@
   ];
   if (document.querySelector('[data-touch-wheel]')) {
     groups.push({key:'touchControl', title:'Điều khiển lái cảm ứng', device:'touch', options:[['stick','Cần lái'], ['wheel','Vô lăng'], ['buttons','Hai nút']], initial:'stick'});
+    groups.push({key:'stickSensitivity', title:'Độ nhạy cần lái', device:'touch', options:[['low','Thấp'], ['medium','Vừa'], ['high','Cao']], initial:'medium'});
   }
   function read(key) {
     try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }

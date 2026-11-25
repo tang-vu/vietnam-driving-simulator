@@ -171,21 +171,27 @@
   .arcade[data-touch-control=stick] .touch [data-key=w] {display:none}
   .arcade[data-touch-control=wheel] .touchWheel, .arcade[data-touch-control=stick] .touchStick {
     display:block; position:relative; width:var(--steering-height); height:var(--steering-height);
-    box-sizing:border-box; border:1px solid #c4d6c480; border-radius:50%; background:#132521da;
-    color:#e6eedd; box-shadow:0 2px 8px #0005; pointer-events:auto; touch-action:none; user-select:none;
+    pointer-events:auto; touch-action:none; user-select:none;
   }
-  .touchStick::before, .touchStick::after {
+  .arcade[data-touch-control=wheel] .touchWheel, .touchStick .stickBase {
+    box-sizing:border-box; border:1px solid #c4d6c480; border-radius:50%; background:#132521da;
+    color:#e6eedd; box-shadow:0 2px 8px #0005;
+  }
+  .touchStick .stickBase {
+    position:absolute; inset:0; pointer-events:none; transform:translate(var(--origin-x,0px),var(--origin-y,0px));
+  }
+  .stickBase::before, .stickBase::after {
     content:""; position:absolute; left:50%; width:8px; height:8px; box-sizing:border-box;
     border:solid #d7e8d4; border-width:2px 0 0 2px; pointer-events:none;
   }
-  .touchStick::before {top:9%; transform:translateX(-50%) rotate(45deg)}
-  .touchStick::after {bottom:9%; transform:translateX(-50%) rotate(225deg)}
-  .touchStick span {
+  .stickBase::before {top:9%; transform:translateX(-50%) rotate(45deg)}
+  .stickBase::after {bottom:9%; transform:translateX(-50%) rotate(225deg)}
+  .stickBase i {
     position:absolute; left:30%; top:30%; width:40%; height:40%; box-sizing:border-box; z-index:1;
     border:2px solid #d9e6d0; border-radius:50%; background:#476351; box-shadow:0 3px 6px #0005;
     transform:translate(var(--stick-x,0px),var(--stick-y,0px)); transition:transform .12s ease-out; pointer-events:none;
   }
-  .touchStick.dragging span {background:var(--lime); border-color:#eff8dd; transition:none}
+  .touchStick.dragging .stickBase i {background:var(--lime); border-color:#eff8dd; transition:none}
   .touchWheel::before, .touchWheel::after {
     content:""; position:absolute; inset:0; pointer-events:none;
     transform:rotate(var(--wheel-angle,0deg)); transition:transform .16s ease-out;
