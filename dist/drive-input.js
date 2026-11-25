@@ -11,11 +11,14 @@ function createDriveInput({timedSteering=false}={}) {
   const keyboard = new Set(), contacts = new Map(), active = new Set();
   const edges=[];
   const has=key=>keyboard.has(key)||active.has(key);
+  const wheel=timedSteering?document.querySelector('[data-touch-wheel]'):null;
+  let wheelPointer=null, wheelAxis=null, originX=0, dragRange=0;
   let applied=0, latest=0, compressedFrame=false;
   function recordSteering(time) {
     if (!timedSteering) return;
     const direction=Number(has('d')||has('arrowright'))-Number(has('a')||has('arrowleft'));
     if (direction===latest) return;
+    if (direction && wheelPointer===null && wheelAxis!==null) resetWheel();
     latest=direction;
     edges.push({time:Math.max(time??performance.now(),edges.at(-1)?.time??0),direction});
   }
@@ -79,7 +82,55 @@ function createDriveInput({timedSteering=false}={}) {
     }
     recordSteering(time);
   }
+  function setWheel(percent) {
+    wheelAxis=percent/100;
+    wheel.value=String(percent);
+    wheel.parentElement.style.setProperty('--wheel-angle',percent*1.15+'deg');
+  }
+  function resetWheel() {
+    if (!wheel) return;
+    const id=wheelPointer;
+    wheelPointer=null;
+    if (id!==null && wheel.hasPointerCapture(id)) wheel.releasePointerCapture(id);
+    wheel.parentElement.classList.remove('turning');
+    setWheel(0);
+    wheelAxis=null;
+  }
+  if (wheel) {
+    wheel.addEventListener('pointerdown',event=>{
+      if (event.button!==0) return;
+      event.preventDefault();
+      if (wheelPointer!==null) return;
+      wheelPointer=event.pointerId;
+      originX=event.clientX;
+      dragRange=Math.min(46,wheel.getBoundingClientRect().width*.42);
+      wheel.setPointerCapture(wheelPointer);
+      wheel.parentElement.classList.add('turning');
+      setWheel(0);
+    });
+    wheel.addEventListener('pointermove',event=>{
+      if (event.pointerId!==wheelPointer) return;
+      const dx=event.clientX-originX;
+      const room=dx<0?originX:window.innerWidth-originX;
+      const range=Math.max(1,Math.min(dragRange,room));
+      setWheel(Math.round(100*Math.max(-1,Math.min(1,dx/range))));
+    });
+    function releaseWheel() {
+      resetWheel();
+      // Continue with the wheel's smooth return until digital steering takes over.
+      if (!latest) wheelAxis=0;
+    }
+    for (const type of ['pointerup','pointercancel','lostpointercapture']) {
+      wheel.addEventListener(type,event=>{if (event.pointerId===wheelPointer) releaseWheel();});
+    }
+    // Native range changes also support assistive input without a drag gesture.
+    wheel.addEventListener('input',()=>setWheel(wheel.valueAsNumber));
+    wheel.addEventListener('blur',()=>{if (wheelPointer===null && wheelAxis!==null) releaseWheel();});
+    wheel.addEventListener('contextmenu',event=>event.preventDefault());
+    new MutationObserver(clear).observe(document.body,{attributes:true,attributeFilter:['data-touch-control','data-steering','data-button-size']});
+  }
   function clear() {
+    resetWheel();
     keyboard.clear();
     for (const id of contacts.keys()) setContact(id);
     edges.length=0;applied=latest=0;compressedFrame=false;
@@ -117,7 +168,7 @@ function createDriveInput({timedSteering=false}={}) {
   window.addEventListener('pagehide', clear);
   matchMedia('(orientation: landscape)').addEventListener('change', clear);
   document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
-  return {has,steering,prepareSteeringFrame,clear,
+  return {has,steering,prepareSteeringFrame,clear,get wheelAxis(){return wheelAxis;},
     add(key,time){keyboard.add(key);recordSteering(time);},
     delete(key,time){keyboard.delete(key);recordSteering(time);}
   };

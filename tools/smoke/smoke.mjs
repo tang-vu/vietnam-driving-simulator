@@ -74,7 +74,7 @@ async function checkPhoneRotation(page, driving) {
         const collisions = await page.evaluate(async ({driving,hand}) => {
           if (driving) Object.assign(document.body.dataset, {steering:hand,buttonSize:'large',mapSize:'large'});
           const selectors = driving
-            ? ['#viewTools button','.tools button','.navigationDock','.routeInfo','.telemetry','#touch button']
+            ? ['#viewTools button','.tools button','.navigationDock','.routeInfo','.telemetry','#touch button','#touch [data-touch-wheel]']
             : ['header nav','.departureRibbon','.openingCopy','.atlasTicket'];
           // The portrait departure panel scrolls above the navigation bar.
           // Measure each control after clipping by its scroll container and viewport.
@@ -120,8 +120,6 @@ async function checkTouchPedals(page) {
     assert.ok(box, selector);
     return {id,x:box.x+box.width/2,y:box.y+box.height/2};
   };
-  const steer = await point('[data-key=a]',1);
-  const right = await point('[data-key=d]',1);
   const gas = await point('[data-key=w]',2);
   const nitro = await point('[data-key~=shift]',2);
   const touch = (type,...touchPoints) => client.send('Input.dispatchTouchEvent',{type,touchPoints});
@@ -131,6 +129,31 @@ async function checkTouchPedals(page) {
   const aboveGas = {...nitro,x:gas.x};
   // Hold the service brake while checking the thumb transitions. Otherwise the
   // time spent delivering touch events can steer the car off the lakeside road.
+  await page.keyboard.down('Space');
+  const wheel = page.getByRole('slider',{name:'Vô lăng',exact:true});
+  const centre = await point('[data-touch-wheel]',1);
+  const travel = Math.min(46,(await wheel.boundingBox()).width*.42);
+  await touch('touchStart',centre,gas);
+  await touch('touchMove',{...centre,x:centre.x+travel*.4},gas);
+  const chassis = (range)=>{const value=(document.body.classList.contains('journey')?car:cupBody).steer;return value>=range[0]&&value<=range[1];};
+  await page.waitForFunction(chassis,[.36,.44]);
+  await expectInputs('w');
+  await touch('touchMove',{...centre,x:centre.x-travel},aboveGas);
+  await page.waitForFunction(chassis,[-1,-.94]);
+  await expectInputs('w','shift');
+  await touch('touchCancel');
+  await page.waitForFunction(chassis,[-.03,.03]);
+  assert.equal(await wheel.inputValue(),'0');
+  await expectInputs();
+  await page.keyboard.up('Space');
+  await page.locator('#pause').click();
+  await page.locator('#rest [data-cockpit-settings]').click();
+  await page.locator('#cockpitSettings label').filter({hasText:'Hai nút'}).click();
+  await page.locator('#cockpitSettings .settingsDone').click();
+  await page.locator('#resume').click();
+  assert.equal(await wheel.isVisible(),false);
+  const steer = await point('[data-key=a]',1);
+  const right = await point('[data-key=d]',1);
   await page.keyboard.down('Space');
   await touch('touchStart',steer,gas);
   await expectInputs('a','w');

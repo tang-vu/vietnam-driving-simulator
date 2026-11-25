@@ -244,7 +244,7 @@ function raceUpdate(dt,stepEnd){
    cupBody.boost=false;cupBody.brake=false;cupBody.slip=0;
  }else{
    s.charge=nitroCharge(s.charge,nitro,held('shift'),drafting,dt);
-   DriveBody.step(cupBody,{surface:cupBody.offroad?'earth':'asphalt',wetness:courseWeather.moisture.asphalt.value,grade:roadGrade(s.d,cupBody.yaw),gas,brake:held(' '),reverse:held('s','arrowdown'),steeringProfile,steer,boost:nitro,power:setup.power+(drafting?1.6:0),top:setup.top},dt);
+   DriveBody.step(cupBody,{surface:cupBody.offroad?'earth':'asphalt',wetness:courseWeather.moisture.asphalt.value,grade:roadGrade(s.d,cupBody.yaw),gas,brake:held(' '),reverse:held('s','arrowdown'),steeringProfile,wheelAxis:keys.wheelAxis,steer,boost:nitro,power:setup.power+(drafting?1.6:0),top:setup.top},dt);
  }
  syncCup();
  DriveBody.axleJoints(cupBody,dt,s.airborne?[]:courseJoints,(speed,rear)=>driveAudio.bridgeAxle(speed,rear,inside));

@@ -503,7 +503,7 @@ function tick(dt,stepEnd){
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
  const x=car.x,z=car.z;
  const steeringProfile=window.driveSteeringProfile;
- DriveBody.step(car,{surface:car.offroad?'earth':car.edge?roadSurfaceClass(car.edge):'asphalt',wetness:roadWetness(),grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steeringProfile,steer:keySet.steering(stepEnd,dt,steeringProfile),power:car.spec.power,top:car.spec.top},dt);
+ DriveBody.step(car,{surface:car.offroad?'earth':car.edge?roadSurfaceClass(car.edge):'asphalt',wetness:roadWetness(),grade:gfx.grade(car.x,car.z,car.yaw,car.edge),gas,reverse,brake,boost,steeringProfile,wheelAxis:keySet.wheelAxis,steer:keySet.steering(stepEnd,dt,steeringProfile),power:car.spec.power,top:car.spec.top},dt);
  const radius=car.spec.width?car.spec.width/2:.88;
  const probeOffset=car.spec.width?car.spec.length/2-radius:1.2;
  const probes=car.spec.rearAxle?[probeOffset,0,-probeOffset]:[probeOffset,-probeOffset];
@@ -903,7 +903,8 @@ async function begin(learner=false){
  $('scoreBoard').textContent=guide?'Bảng hạng · '+guide.route.title:'Xem hạng và gửi thành tích';
  mode='drive';document.body.dataset.phase='drive';$('grid').hidden=true;$('hud').hidden=false;$('touch').hidden=false;$('camera').hidden=false;$('pause').hidden=false;updateHud();
  if(!guide&&!duel){
-   inform(matchMedia('(pointer:coarse)').matches?'Giữ Ga để lăn bánh · chạm ◀ hoặc ▶ để đánh lái':'Giữ W hoặc ↑ để lên ga · A/D để đánh lái',4);
+   const touchHint=document.body.dataset.touchControl==='wheel'?'kéo ngang vô lăng để đánh lái':'chạm ◀ hoặc ▶ để đánh lái';
+   inform(matchMedia('(pointer:coarse)').matches?'Giữ Ga để lăn bánh · '+touchHint:'Giữ W hoặc ↑ để lên ga · A/D để đánh lái',4);
    // Only dismiss this hint if another message hasn't replaced it.
    throttleHint=$('callout').firstChild;
  }

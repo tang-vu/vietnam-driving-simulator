@@ -142,6 +142,14 @@ window.DriveBody={
    return c.spec?.speedGovernor?Math.min(next,input.top):next;
  },
  wheelAngle(c,input,dt,forward,next,wheelbase,traction=1){
+   const steeringLock=(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
+   if(input.wheelAxis!=null){
+     // A thumb position requests a wheel angle, independent of digital hold time.
+     c.steerHold=0;c.directBlend=0;
+     c.steer+=(input.wheelAxis-c.steer)*(1-Math.exp(-dt*20));
+     c.steerTravel=c.steer;
+     return c.steer*steeringLock;
+   }
    const adaptive=input.steeringProfile==='adaptive';
    const profile=adaptive?4:(input.steeringProfile??4);
    let classic=Math.max(0,2-profile);
@@ -156,7 +164,6 @@ window.DriveBody={
    }else{
      c.steerHold=0;c.directBlend=0;
    }
-   const steeringLock=(c.spec?.steerLock??.52)/(1+Math.abs(next)*.056);
    if(profile===1){
      c.steer+=(input.steer-c.steer)*(1-Math.exp(-dt*8));
      c.steerTravel=c.steer;

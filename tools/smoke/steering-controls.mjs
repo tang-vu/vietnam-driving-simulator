@@ -22,7 +22,7 @@ try{
     page.on('pageerror',error=>errors.push(error.message));
     await page.clock.setFixedTime(new Date('2026-11-23T05:00:00Z'));
     await page.addInitScript(()=>{
-      localStorage.setItem('taylai.cockpit.v1',JSON.stringify({graphics:'low'}));
+      localStorage.setItem('taylai.cockpit.v1',JSON.stringify({graphics:'low',touchControl:'buttons'}));
       localStorage.setItem('taylai.world.traffic','quiet');
     });
     await page.route('**/*',async route=>{

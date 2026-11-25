@@ -11,6 +11,9 @@
     {key:'steering', title:'Tay đánh lái', device:'touch', options:[['left','Tay trái'], ['right','Tay phải']], initial:'left'},
     {key:'buttonSize', title:'Cỡ nút cảm ứng', device:'touch', options:[['standard','Chuẩn'], ['large','Lớn']], initial:'standard'}
   ];
+  if (document.querySelector('[data-touch-wheel]')) {
+    groups.push({key:'touchControl', title:'Điều khiển lái cảm ứng', device:'touch', options:[['wheel','Vô lăng'], ['buttons','Hai nút']], initial:'wheel'});
+  }
   function read(key) {
     try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
   }
@@ -150,7 +153,7 @@
   if (document.body.classList.contains('arcade') || document.getElementById('hall')) {
     const field=document.createElement('fieldset');
     field.className='steeringProfile';
-    field.innerHTML='<legend id="steeringProfileTitle">Cảm giác lái</legend>'+
+    field.innerHTML='<legend id="steeringProfileTitle">Cảm giác lái bằng phím và hai nút</legend>'+
       '<label class="adaptiveSteering"><input id="adaptiveSteering" type="checkbox">Linh hoạt</label>'+
       '<output for="steeringProfile adaptiveSteering"></output>'+
       '<input id="steeringProfile" name="steeringProfile" type="range" min="1" max="4" value="4" step="0.01" aria-labelledby="steeringProfileTitle">'+

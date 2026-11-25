@@ -115,7 +115,7 @@ for(const hz of [30,60,100,144]) {
   }
 }
 
-const host={window:{addEventListener(){}},document:{querySelectorAll:()=>[],addEventListener(){}},
+const host={window:{addEventListener(){}},document:{querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}},
   matchMedia:()=>({addEventListener(){}}),performance};
 const makeInput=runInNewContext(readFileSync(new URL('../../dist/drive-input.js',import.meta.url),'utf8')+
   '\ncreateDriveInput',host);
