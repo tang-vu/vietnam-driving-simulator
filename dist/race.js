@@ -230,11 +230,11 @@ function raceUpdate(dt,stepEnd){
    keys.steering(stepEnd,dt);
    const before=Math.ceil(countdown);countdown-=dt;
    if(Math.ceil(countdown)!==before)driveAudio.cue(countdown<=0);$('count').textContent=countdown>0?Math.ceil(countdown):'';
-   if(countdown<=0){setMode('drive');tellRace('Bánh nóng ra lò!');}return;
+   if(countdown<=0){setMode('drive');tellRace(matchMedia('(pointer:coarse)').matches?touchDrivingHint():'Bánh nóng ra lò!');}return;
  }
  if(state.mode!=='drive')return;
  const s=state,previousD=s.d,previousLane=s.offset;s.time+=dt;grace=Math.max(0,grace-dt);
- const gas=held('w','arrowup'),brake=held('s','arrowdown',' ');
+ const gas=keys.throttle,brake=held('s','arrowdown',' ');
  const nitro=held('shift')&&s.charge>1&&!brake&&!s.airborne,setup=cupSetups[chosenCar];
  drafting=!s.airborne&&rivals.some(r=>inSlipstream(s,r));
  const steeringProfile=window.driveSteeringProfile,steer=keys.steering(stepEnd,dt,steeringProfile);

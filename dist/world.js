@@ -496,7 +496,7 @@ function waterStep(dt){
 }
 function tick(dt,stepEnd){
  cooldown=Math.max(0,cooldown-dt);streamRetry=Math.max(0,streamRetry-dt);
- const gas=held('w','arrowup'),reverse=held('s','arrowdown');
+ const gas=keySet.throttle,reverse=held('s','arrowdown');
  car.throttle=gas;
  if(gas||reverse)car.parked=false;
  const brake=car.parked||held(' '),boost=!car.spec.speedGovernor&&!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
@@ -903,8 +903,7 @@ async function begin(learner=false){
  $('scoreBoard').textContent=guide?'Bảng hạng · '+guide.route.title:'Xem hạng và gửi thành tích';
  mode='drive';document.body.dataset.phase='drive';$('grid').hidden=true;$('hud').hidden=false;$('touch').hidden=false;$('camera').hidden=false;$('pause').hidden=false;updateHud();
  if(!guide&&!duel){
-   const touchHint=document.body.dataset.touchControl==='wheel'?'kéo ngang vô lăng để đánh lái':'chạm ◀ hoặc ▶ để đánh lái';
-   inform(matchMedia('(pointer:coarse)').matches?'Giữ Ga để lăn bánh · '+touchHint:'Giữ W hoặc ↑ để lên ga · A/D để đánh lái',4);
+   inform(matchMedia('(pointer:coarse)').matches?touchDrivingHint():'Giữ W hoặc ↑ để lên ga · A/D để đánh lái',4);
    // Only dismiss this hint if another message hasn't replaced it.
    throttleHint=$('callout').firstChild;
  }

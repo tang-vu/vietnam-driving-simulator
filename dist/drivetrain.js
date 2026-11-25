@@ -127,7 +127,7 @@ window.DriveBody={
  },
  forwardSpeed(c,input,dt,forward,traction=1){
    const limit=input.top+(input.boost?9:0);
-   let drive=input.gas?input.power:0;
+   let drive=input.gas?input.power*input.gas:0;
    if(input.boost&&forward>=-.3)drive+=13;
    c.reverseDelay=input.reverse&&forward<=.35?c.reverseDelay+dt:0;
    // Keep the brake engaged through the direction change on a downhill start.

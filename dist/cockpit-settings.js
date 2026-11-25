@@ -12,7 +12,7 @@
     {key:'buttonSize', title:'Cỡ nút cảm ứng', device:'touch', options:[['standard','Chuẩn'], ['large','Lớn']], initial:'standard'}
   ];
   if (document.querySelector('[data-touch-wheel]')) {
-    groups.push({key:'touchControl', title:'Điều khiển lái cảm ứng', device:'touch', options:[['wheel','Vô lăng'], ['buttons','Hai nút']], initial:'wheel'});
+    groups.push({key:'touchControl', title:'Điều khiển lái cảm ứng', device:'touch', options:[['stick','Cần lái'], ['wheel','Vô lăng'], ['buttons','Hai nút']], initial:'stick'});
   }
   function read(key) {
     try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }

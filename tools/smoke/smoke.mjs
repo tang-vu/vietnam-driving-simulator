@@ -74,7 +74,7 @@ async function checkPhoneRotation(page, driving) {
         const collisions = await page.evaluate(async ({driving,hand}) => {
           if (driving) Object.assign(document.body.dataset, {steering:hand,buttonSize:'large',mapSize:'large'});
           const selectors = driving
-            ? ['#viewTools button','.tools button','.navigationDock','.routeInfo','.telemetry','#touch button','#touch [data-touch-wheel]']
+            ? ['#viewTools button','.tools button','.navigationDock','.routeInfo','.telemetry','#touch button','#touch [data-touch-wheel]','#touch [data-touch-stick]']
             : ['header nav','.departureRibbon','.openingCopy','.atlasTicket'];
           // The portrait departure panel scrolls above the navigation bar.
           // Measure each control after clipping by its scroll container and viewport.
@@ -120,11 +120,48 @@ async function checkTouchPedals(page) {
     assert.ok(box, selector);
     return {id,x:box.x+box.width/2,y:box.y+box.height/2};
   };
-  const gas = await point('[data-key=w]',2);
-  const nitro = await point('[data-key~=shift]',2);
   const touch = (type,...touchPoints) => client.send('Input.dispatchTouchEvent',{type,touchPoints});
   const expectInputs = (...keys) => page.waitForFunction(
     expected=>['a','d','w','s','shift'].every(key=>held(key)===expected.includes(key)),keys,{timeout:10000});
+  async function selectControl(name) {
+    await page.locator('#pause').click();
+    await page.locator('#rest [data-cockpit-settings]').click();
+    await page.locator('#cockpitSettings label').filter({hasText:name}).click();
+    await page.locator('#cockpitSettings .settingsDone').click();
+    await page.locator('#resume').click();
+  }
+  const stick=page.locator('[data-touch-stick]'),origin=await point('[data-touch-stick]',1);
+  const radius=(await stick.boundingBox()).width*.30;
+  const push=(x,y)=>touch('touchMove',{...origin,x:origin.x+radius*x,y:origin.y-radius*y});
+  const chassis = (range)=>{const value=(document.body.classList.contains('journey')?car:cupBody).steer;return value>=range[0]&&value<=range[1];};
+  await touch('touchStart',origin);
+  await expectInputs();
+  await push(.05,.55);
+  await expectInputs('w');
+  await page.waitForFunction(()=>{
+    const input=document.body.classList.contains('journey')?keySet:keys;
+    return input.wheelAxis===0&&input.throttle>.40&&input.throttle<.55;
+  });
+  await push(.7,1);
+  await page.waitForFunction(chassis,[.56,.75]);
+  await page.waitForFunction(()=>(document.body.classList.contains('journey')?car:cupBody).speed>1);
+  await push(-.7,.85);
+  await expectInputs('w');
+  await page.waitForFunction(chassis,[-.75,-.56]);
+  await push(0,-1);
+  await expectInputs('s');
+  await page.waitForFunction(()=>(document.body.classList.contains('journey')?car:cupBody).speed<-.4);
+  await touch('touchEnd');
+  await expectInputs();
+  await touch('touchStart',origin);
+  await push(.8,.8);
+  await expectInputs('w');
+  await touch('touchCancel');
+  await expectInputs();
+  await page.waitForFunction(chassis,[-.03,.03]);
+  await selectControl('Vô lăng');
+  const gas = await point('[data-key=w]',2);
+  const nitro = await point('[data-key~=shift]',2);
   // Slide straight up and back with one thumb while the other thumb steers.
   const aboveGas = {...nitro,x:gas.x};
   // Hold the service brake while checking the thumb transitions. Otherwise the
@@ -135,7 +172,6 @@ async function checkTouchPedals(page) {
   const travel = Math.min(46,(await wheel.boundingBox()).width*.42);
   await touch('touchStart',centre,gas);
   await touch('touchMove',{...centre,x:centre.x+travel*.4},gas);
-  const chassis = (range)=>{const value=(document.body.classList.contains('journey')?car:cupBody).steer;return value>=range[0]&&value<=range[1];};
   await page.waitForFunction(chassis,[.36,.44]);
   await expectInputs('w');
   await touch('touchMove',{...centre,x:centre.x-travel},aboveGas);
@@ -146,11 +182,7 @@ async function checkTouchPedals(page) {
   assert.equal(await wheel.inputValue(),'0');
   await expectInputs();
   await page.keyboard.up('Space');
-  await page.locator('#pause').click();
-  await page.locator('#rest [data-cockpit-settings]').click();
-  await page.locator('#cockpitSettings label').filter({hasText:'Hai nút'}).click();
-  await page.locator('#cockpitSettings .settingsDone').click();
-  await page.locator('#resume').click();
+  await selectControl('Hai nút');
   assert.equal(await wheel.isVisible(),false);
   const steer = await point('[data-key=a]',1);
   const right = await point('[data-key=d]',1);

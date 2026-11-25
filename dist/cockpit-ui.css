@@ -162,16 +162,30 @@
   .arcade[data-map-side=right] .telemetry {right: auto; left: var(--left)}
 }
 .journey .shutterLabel {display: none}
-.touchWheel {display:none}
+.touchWheel, .touchStick {display:none}
 @media (any-pointer: coarse), (max-width: 700px) {
   .arcade {--button-width: clamp(45px, 12vw, 65px); --map-width: clamp(84px, 24vw, 122px)}
   .arcade[data-touch-control=wheel] {--steering-height:clamp(82px,calc(var(--button-width) * 1.8),108px)}
-  .arcade[data-touch-control=wheel] .touch :is([data-key=a],[data-key=d]) {display:none}
-  .arcade[data-touch-control=wheel] .touchWheel {
+  .arcade[data-touch-control=stick] {--steering-height:clamp(94px,calc(var(--button-width) * 2),116px)}
+  .arcade:is([data-touch-control=wheel],[data-touch-control=stick]) .touch :is([data-key=a],[data-key=d]),
+  .arcade[data-touch-control=stick] .touch [data-key=w] {display:none}
+  .arcade[data-touch-control=wheel] .touchWheel, .arcade[data-touch-control=stick] .touchStick {
     display:block; position:relative; width:var(--steering-height); height:var(--steering-height);
     box-sizing:border-box; border:1px solid #c4d6c480; border-radius:50%; background:#132521da;
     color:#e6eedd; box-shadow:0 2px 8px #0005; pointer-events:auto; touch-action:none; user-select:none;
   }
+  .touchStick::before, .touchStick::after {
+    content:""; position:absolute; left:50%; width:8px; height:8px; box-sizing:border-box;
+    border:solid #d7e8d4; border-width:2px 0 0 2px; pointer-events:none;
+  }
+  .touchStick::before {top:9%; transform:translateX(-50%) rotate(45deg)}
+  .touchStick::after {bottom:9%; transform:translateX(-50%) rotate(225deg)}
+  .touchStick span {
+    position:absolute; left:30%; top:30%; width:40%; height:40%; box-sizing:border-box; z-index:1;
+    border:2px solid #d9e6d0; border-radius:50%; background:#476351; box-shadow:0 3px 6px #0005;
+    transform:translate(var(--stick-x,0px),var(--stick-y,0px)); transition:transform .12s ease-out; pointer-events:none;
+  }
+  .touchStick.dragging span {background:var(--lime); border-color:#eff8dd; transition:none}
   .touchWheel::before, .touchWheel::after {
     content:""; position:absolute; inset:0; pointer-events:none;
     transform:rotate(var(--wheel-angle,0deg)); transition:transform .16s ease-out;
@@ -200,6 +214,8 @@
   .arcade .touch {bottom: calc(var(--bottom) + 14px); align-items: end}
   .arcade .touch > div {gap: 6px}
   .arcade .touch > div:last-child {display: grid; grid-template-columns: repeat(2, var(--button-width))}
+  .arcade[data-touch-control=stick] .touch > div:last-child {grid-template-columns:auto; justify-items:end}
+  .arcade[data-touch-control=stick][data-steering=right] .touch > div:last-child {justify-items:start}
   .arcade .touch button {width: var(--button-width); min-width: 0; min-height: var(--button-width); padding: 3px 0; border-radius: 14px; background: #132521e8; color: #f6faed; border: 1px solid #c4d6c480; font-size: 14px}
   .arcade .touch [data-key~=shift] {grid-column: 1 / -1; justify-self: end; min-height: 44px; width: max(75%, 78px); color: var(--lime); border-color: #b3ca876b}
   .arcade .touch [data-key=w] {min-width: 0; min-height: calc(var(--button-width) + 7px); background: var(--lime); color: #14241b; border-color: var(--lime)}
