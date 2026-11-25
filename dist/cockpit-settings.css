@@ -46,7 +46,7 @@
 @media (any-pointer: coarse) {
   .startSteering summary, .arcade .startSteering > button {min-height: 44px}
 }
-@media (min-width: 701px) and (max-height: 760px) {
+@media (min-width: 701px) and (max-height: 760px), (max-width: 700px) and (orientation: landscape) {
   .arcade.journey .opening {overflow-y: auto; overscroll-behavior: contain; pointer-events: auto}
 }
 @media (any-pointer: coarse), (max-width: 700px) {

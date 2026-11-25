@@ -35,7 +35,12 @@ window.createDrivingFX = function (T, scene, renderer) {
   const outlets={
     supercar:{x:0,y:.32,z:-2.35,width:2.35,height:.78},
     'muscle-car':{x:-.56,y:.25,z:-2.34,width:.56,height:.56},
-    rally:{x:-.50,y:.28,z:-2.02,width:.70,height:.70}
+    rally:{x:-.50,y:.28,z:-2.02,width:.70,height:.70},
+    // Two tailpipes in the rear bumper, firing backwards.
+    'mustang-gt3':{pipes:[
+      {x:.25,y:.47,z:-2.36,dx:0,dy:0,dz:-1,size:.11,length:1.1},
+      {x:-.25,y:.47,z:-2.36,dx:0,dy:0,dz:-1,size:.11,length:1.1}
+    ]}
   };
   const exhaust=new T.Group(),jet=new T.Mesh(flameGeometry,flameMaterial);
   jet.rotation.y=Math.PI;exhaust.add(jet);
@@ -46,15 +51,108 @@ window.createDrivingFX = function (T, scene, renderer) {
     transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false
   }));
   glow.rotation.x=-Math.PI/2;glow.scale.set(1.35,1.65,1);exhaust.add(glow);
+  // Blue exhaust jets for cars with real tailpipes: three crossed sheets per
+  // pipe, a white-blue core whose outer edge turns gradually yellow. Length
+  // flickers, and a lift of the throttle cracks a short pop.
+  const fireGeometry=new T.BufferGeometry(),fireVerts=[],fireUV=[];
+  for(let k=0;k<3;k++){
+    const a=k*Math.PI/3,cs=Math.cos(a),sn=Math.sin(a);
+    for(let j=0;j<10;j++)for(const [u,t] of [[0,j],[1,j],[1,j+1],[0,j],[1,j+1],[0,j+1]]){
+      const x=u-.5,v=t/10;fireVerts.push(cs*x,sn*x,v);fireUV.push(u,v);
+    }
+  }
+  fireGeometry.setAttribute('position',new T.Float32BufferAttribute(fireVerts,3));
+  fireGeometry.setAttribute('uv',new T.Float32BufferAttribute(fireUV,2));
+  const fireShader={
+    // A tight cone straight out of the pipe: almost no sway, a slight flare
+    // at the tail, and standing shock diamonds along the jet.
+    vertexShader:'varying vec2 vUv;uniform float time,flameLength,width,seed;void main(){vUv=uv;vec3 p=position;float v=p.z;'+
+      'float spread=width*(.9+.9*pow(v,.9))*(1.-.75*v*v);p.xy*=spread;'+
+      'p.x+=sin(time*41.+v*13.+seed)*.012*v*width*6.;p.y+=sin(time*47.-v*11.+seed*2.)*.012*v*width*6.;'+
+      'p.z*=flameLength;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}',
+    fragmentShader:'varying vec2 vUv;uniform float time,power,seed;'+
+      'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}'+
+      'float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.),f.x),f.y);}'+
+      'float fbm(vec2 p){return .5*n(p)+.25*n(p*2.07+1.7)+.125*n(p*4.13+4.1)+.0625*n(p*8.3+2.3);}'+
+      'void main(){float v=vUv.y,x=(vUv.x-.5)*2.;'+
+      'float t=fbm(vec2(x*3.+seed,v*7.-time*30.));'+
+      'x+=(t-.5)*.22*v;'+
+      'float rr=abs(x)/(1.-.45*v);float shape=1.-smoothstep(.45,1.,rr);'+
+      'float tip=1.-smoothstep(.5,1.,v+(t-.5)*.28+(1.-power)*.7);'+
+      'float diamonds=.72+.28*cos(v*34.-time*4.+seed);'+
+      'float dens=shape*tip*power*mix(1.,diamonds,smoothstep(.06,.22,v))*(.8+.35*t);if(dens<.01)discard;'+
+      'float heat=clamp((1.-rr)*(1.3-v),0.,1.);'+
+      'vec3 core=mix(vec3(.1,.35,1.),vec3(.6,.85,1.),smoothstep(.55,.95,heat));'+
+      'float rim=clamp(smoothstep(.5,.9,rr)+smoothstep(.55,1.,v)*.35,0.,1.);'+
+      'vec3 c=mix(core,vec3(1.,.78,.25),rim);c=mix(c,vec3(1.,.52,.12),smoothstep(.75,1.,v)*rim*.6);'+
+'gl_FragColor=vec4(c*(.95+.75*heat),min(1.,dens*1.15));}',
+    transparent:true,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false
+  };
+  const fireGlowMaterial=new T.ShaderMaterial({
+    uniforms:{power:{value:0}},
+    vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'varying vec2 vUv;uniform float power;void main(){float r=length((vUv-.5)*2.);gl_FragColor=vec4(.18,.42,1.,power*.45*(1.-smoothstep(.0,1.,r)));}',
+    transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false
+  });
+  const fires=[],fireGroup=new T.Group();
+  let fireStyle=false,popTime=0,popLevel=0,nextPop=0,wasBoosting=false,wasUnderLoad=false,flicker=1;
+  function buildFires(pipes){
+    for(const f of fires){f.material.dispose();}
+    fires.length=0;fireGroup.clear();
+    pipes.forEach((pipe,i)=>{
+      const material=new T.ShaderMaterial({...fireShader,uniforms:{time:{value:0},power:{value:0},flameLength:{value:1},width:{value:pipe.size},seed:{value:i*7.3+1.1}}});
+      const mesh=new T.Mesh(fireGeometry,material);mesh.frustumCulled=false;mesh.renderOrder=4;
+      mesh.position.set(pipe.x,pipe.y,pipe.z);
+      mesh.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),new T.Vector3(pipe.dx,pipe.dy||0,pipe.dz).normalize());
+      const pool=new T.Mesh(glow.geometry,fireGlowMaterial);pool.rotation.x=-Math.PI/2;
+      pool.position.set(pipe.x+pipe.dx*.35,.05,pipe.z+pipe.dz*.35);pool.scale.set(1.5,1.5,1);
+      fireGroup.add(mesh,pool);fires.push({mesh,material,pipe,length:pipe.length});
+    });
+  }
   function mountExhaust(model,kind){
     const outlet=outlets[kind],parent=outlet?model:null;
-    if(exhaust.parent===(parent??null))return;
-    exhaust.removeFromParent();
+    if(exhaust.parent===(parent??null)&&exhaust.userData.kind===kind)return;
+    exhaust.removeFromParent();exhaust.userData.kind=kind;
+    fireStyle=Boolean(parent&&outlet.pipes);
+    wasBoosting=wasUnderLoad=false;popTime=popLevel=0;
     if(!parent)return;
-    jet.position.set(outlet.x,outlet.y,outlet.z);
-    jet.scale.set(outlet.width,outlet.height,1);
-    glow.position.set(outlet.x,.06,outlet.z-.48);
+    exhaust.clear();
+    if(fireStyle){buildFires(outlet.pipes);exhaust.add(fireGroup);}
+    else{
+      exhaust.add(jet,glow);
+      jet.position.set(outlet.x,outlet.y,outlet.z);
+      jet.scale.set(outlet.width,outlet.height,1);
+      glow.position.set(outlet.x,.06,outlet.z-.48);
+    }
     parent.add(exhaust);
+  }
+  const pipeWorld=new T.Vector3();
+  function updateFires(dt,boosting,driving,speed,throttle){
+    const underLoad=driving&&(boosting||throttle);
+    if(boosting&&!wasBoosting)popTime=.11;
+    if(driving&&wasUnderLoad&&!underLoad&&speed>8){
+      popTime=.16;
+      window.driveAudio?.backfire();
+    }
+    wasUnderLoad=underLoad;
+    wasBoosting=boosting;
+    if(boosting&&clock>nextPop){popTime=Math.max(popTime,.06+Math.random()*.07);nextPop=clock+.25+Math.random()*.9;}
+    popTime=Math.max(0,popTime-dt);
+    popLevel+=((popTime>0?1:0)-popLevel)*(1-Math.exp(-dt*(popTime>0?40:14)));
+    flicker+=((.72+Math.random()*.5)-flicker)*(1-Math.exp(-dt*30));
+    const level=Math.max(boostLevel,popLevel*.9);
+    for(const f of fires){
+      const u=f.material.uniforms;
+      u.time.value=reduced.matches?0:clock;
+      u.power.value=Math.min(1,level*1.1);
+      u.flameLength.value=f.length*(.35+.65*boostLevel+.6*popLevel)*(1+clamp(speed/60,0,.25))*flicker;u.width.value=f.pipe.size*(1+.35*popLevel)*(.85+.3*flicker);
+      if(popTime>0&&driving&&Math.random()<dt*30){
+        f.mesh.getWorldPosition(pipeWorld);
+        puff(pipeWorld.x+ox,pipeWorld.y,pipeWorld.z+oz,(Math.random()-.5)*.4,.25+Math.random()*.3,(Math.random()-.5)*.4,.16,.5,[.32,.3,.29],.22);
+      }
+    }
+    fireGlowMaterial.uniforms.power.value=level*flicker;
+    return level;
   }
   function boostFov(active,inside){
     return active&&!reduced.matches?(inside?2:5):0;
@@ -180,6 +278,7 @@ window.createDrivingFX = function (T, scene, renderer) {
     puff(x,y+.12,z,-dx*.55,.38,-dz*.55,.2,.55,[.54,.52,.49],.25);
   }
   function reset(){
+    wasUnderLoad=wasBoosting=false;popTime=popLevel=0;
     for(const pool of [smoke,sparks,chips])for(const p of pool)p.life=0;
     marks.fill(null);marksBorn.fill(-100);markGeo.attributes.born.needsUpdate=true;
     kick=boostLevel=flow=smokeFraction=sprayFraction=skidDistance=0;lastCar=previousAxle=null;root.visible=exhaust.visible=false;
@@ -199,7 +298,8 @@ window.createDrivingFX = function (T, scene, renderer) {
     const dry=1-wet,dust=rolling&&car.offroad;
     const boostTarget=driving&&car.boost?1:0;
     boostLevel+=(boostTarget-boostLevel)*(1-Math.exp(-dt*(boostTarget?12:8)));
-    exhaust.visible=driving&&boostLevel>.045&&!inside;
+    const flame=fireStyle?updateFires(dt,driving&&Boolean(car.boost),driving,speed,car.throttle):boostLevel;
+    exhaust.visible=driving&&flame>.045&&!inside;
     flameMaterial.uniforms.time.value=reduced.matches?0:clock;
     flameMaterial.uniforms.power.value=boostLevel;
     glow.material.uniforms.power.value=boostLevel;

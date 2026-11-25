@@ -6,7 +6,7 @@ import guidedLengths from "./guided-lengths.js";
 import "../dist/road-tile-codec.js";
 
 const tour = "xuyen-viet";
-const tourVehicles = new Set(["supercar","gt","rally","muscle-car","family-sedan","suv","family-minivan",
+const tourVehicles = new Set(["supercar","gt","rally","muscle-car","mustang-gt3","family-sedan","suv","family-minivan",
   "city-sedan","classic-sedan","compact-mpv","touring-mpv","motorcycle","box-truck"]);
 const isGuided = route => Object.hasOwn(guidedLengths,route);
 const hour = 3600_000;

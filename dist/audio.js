@@ -475,5 +475,6 @@
     gain.gain.value=.4+strength*.45;source.connect(filter).connect(gain).connect(output);source.start();
     source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
   }
-  window.driveAudio = { toggle, update, cue, ignition, impact, bridgeAxle, broadcast, souvenir, get enabled(){return enabled;}, get engineRpm(){return engineRpm;} };
+  function backfire(){tone(175,46,.055,.18,0,'sawtooth');}
+  window.driveAudio = { toggle, update, cue, ignition, impact, backfire, bridgeAxle, broadcast, souvenir, get enabled(){return enabled;}, get engineRpm(){return engineRpm;} };
 })();

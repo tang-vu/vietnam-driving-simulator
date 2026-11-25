@@ -52,3 +52,11 @@ ViVu3D repainted the tank, fenders and frame, removed the side stand, simplified
 geometry and textures, and adapted the wheel pivots, mirrors, lights and dash.
 
 The garage preview images are renders of the corresponding playable models.
+
+mustang-gt3.glb is adapted from "Mustang GT3-77" by toddeppe.
+Source: https://sketchfab.com/3d-models/mustang-gt3-77-00d3930b7f384859bef0ec32eacd74fe
+License: Creative Commons Attribution 4.0 International (CC BY 4.0).
+https://creativecommons.org/licenses/by/4.0/
+ViVu3D reduced the geometry and textures, removed unused UV sets, quantized the
+meshes, split the tail lights into their own material and rebuilt the wheel
+and steering pivots for the game.

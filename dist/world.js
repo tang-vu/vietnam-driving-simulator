@@ -195,6 +195,8 @@ async function startAt(place,restore=null,guided=null){
  const site=place[3]||destinations.find(entry=>restore?.destination===entry.id)||catalogStop(restore?.destination);
  if(site)useSightEntrance(site);
  car.scenicHour=scenicPasses.has(site?.id)?scenicHour():null;
+ car.sky=guided?.sky||null;
+ if(car.sky==='sunset')car.scenicHour=sunsetHour(...(guided.finish||guided.start));
  const departure=restore?null:JourneyDepartures.byId(site?.id);
  if(departure&&!guided&&!reduceMotion.matches)car.openingPose=1;
  JourneyDepartures.select(departure);
@@ -495,6 +497,7 @@ function waterStep(dt){
 function tick(dt,stepEnd){
  cooldown=Math.max(0,cooldown-dt);streamRetry=Math.max(0,streamRetry-dt);
  const gas=held('w','arrowup'),reverse=held('s','arrowdown');
+ car.throttle=gas;
  if(gas||reverse)car.parked=false;
  const brake=car.parked||held(' '),boost=!car.spec.speedGovernor&&!car.wading&&held('shift')&&nitro>1&&!reverse&&!brake;
  nitro=clamp(nitro+(boost?-27:held('shift')?0:6)*dt,0,100);
@@ -754,7 +757,7 @@ function frame(now){
      }
      crashTime-=dt;if(crashTime<=0){mode='pit';pit(crashKind,car.spec.speedGovernor);}
    }
-   if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.locate(...roads.geo(car.x,car.z));}
+   if(mode!=='loading'&&roads&&!document.hidden&&now>=nextWeatherCheck){nextWeatherCheck=now+2000;gfx.weather.stage(car.sky);gfx.weather.locate(...roads.geo(car.x,car.z));}
    car.driving=mode==='drive';car.showroom=mode==='grid';
    vehicleLook.update(dt);
    if(mode!=='loading'&&mode!=='error'&&mode!=='map'&&!$('postcard').open&&!$('fieldDialog').open&&!$('sightPhoto').open&&!document.hidden){
@@ -862,6 +865,7 @@ $('arrivalRetry').onclick=()=>prepareDrive(guide.route);
 $('showGuidedBoard').onclick=()=>planner.open(false);
 $('arrivalBoard').onclick=()=>{if(guide?.route.id)boardFor(guide.route).open(guide.timeMs);};
 function leaveArrival(){
+ if(car.sky){car.sky=null;car.scenicHour=null;nextWeatherCheck=0;}
  $('guidedArrival').close();mode='drive';keySet.clear();updateHud();
 }
 $('arrivalTour').onclick=()=>{leaveArrival();$('tourView').click();};

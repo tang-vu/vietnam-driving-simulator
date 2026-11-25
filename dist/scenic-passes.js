@@ -21,6 +21,17 @@ function scenicHour(){
   return light==='morning'?7.25:light==='late'?16.5:null;
 }
 
+// Vietnam local hour when the sun stands `elevation` degrees above the western
+// horizon today. Same solar model as world-atmosphere, so the staged sky matches.
+function sunsetHour(lon,lat,elevation=4,now=Date.now()){
+  const rad=Math.PI/180,day=new Date(now);
+  const yearDay=(now-Date.UTC(day.getUTCFullYear(),0,1))/86400000;
+  const declination=.409*Math.sin((yearDay-80)*2*Math.PI/365.24);
+  const cosH=(Math.sin(elevation*rad)-Math.sin(declination)*Math.sin(lat*rad))/(Math.cos(declination)*Math.cos(lat*rad));
+  const hourAngle=Math.acos(Math.max(-1,Math.min(1,cosH)))/rad;
+  return 7+(180+hourAngle-lon)/15;
+}
+
 // The simulated carriageway smooths sharp hillside DEM gradients over the length
 // of an approach. Its profile is shared by the driving physics and the route atlas.
 function smoothRoadProfile(stage){

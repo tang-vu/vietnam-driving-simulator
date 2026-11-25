@@ -84,6 +84,7 @@
       pavement:basic(0xc2b8a3),steel:basic(0x687877),concrete:basic(0xb0afa3),glass:new T.MeshStandardMaterial({color:0x5c7979,roughness:.19,metalness:.53,envMapIntensity:.86}),
       awning:streetRoofMaterial(T,0xb6b9a9,false),tree:treeModels.material,pine:treeModels.material,palm:treeModels.palmMaterial
     };
+    if(window.CoastalRouteScenery)material.beacon=CoastalRouteScenery.beaconMaterial(T);
     material.lantern=new T.MeshStandardMaterial({color:0xd0cbb9,roughness:.43,emissive:0xffc786,emissiveIntensity:0});
     const asphaltOrigin=new T.Vector2();
     material.glass.emissive.setHex(0xda9e60);material.glass.emissiveIntensity=0;
@@ -1118,6 +1119,12 @@
           plantTree('tree',x,z,h,h*.94,.35,0xfff4d8,tree);
         }
       }
+      if(graph&&window.CoastalRouteScenery){
+        yield* CoastalRouteScenery.build({T,graph,cx,cz,segments,instance,plantTree,registerObstacle,localGround,streetBulbs,
+          unitBox,unitPole,gable,radius:detailRadius,compact:graphics.profile.id==='low',
+          clear:(x,z,r)=>!blocked(x,z,r)&&!contact(x+cx,z+cz,r)&&!onApproach(x+cx,z+cz)&&!seaOpening?.(x,z),
+          farm:(x,z)=>Boolean(farms.parcelAt(x+cx,z+cz))});
+      }
       if(graph){
         yield* forestPlots(graph,cx,cz,Math.min(600,detailRadius),(ix,iz,wx,wz,gx,gz,rand)=>{
             if(seaOpening?.(wx-cx,wz-cz))return;
@@ -1853,6 +1860,7 @@
       graphics.frame(now,car.driving);dt=Math.max(0,Math.min(.12,dt||0));version++;
       waterSurface.update(now*.001,weather.rainfall);
       mappedLights.update(now*.001);
+      window.CoastalRouteScenery?.blink(material.beacon,now*.001);
       const x=car.x-originX,z=car.z-originZ;
       streetLife.render(dt,car.sightView?.x??car.x,car.sightView?.z??car.z,driveGround);
       const wake=car.flood?Math.exp(-car.flood.age*.36):car.wading?Math.min(1,Math.abs(car.speed)*.11):0;

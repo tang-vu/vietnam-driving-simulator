@@ -12,6 +12,8 @@ const worldGarage={
   supercar:{asset:'streetscape/race-car.glb',length:4.6,paint:0xc63322,power:8.4,top:48},
   gt:{asset:'streetscape/electric-gt.glb',length:4.67,paint:0x305955,power:7.8,top:43,wheelbase:2.85,electric:true},
   'muscle-car':{asset:'streetscape/muscle-car.glb',length:4.90,paint:0x841619,power:7.1,top:45,wheelbase:2.75,mass:1680},
+  // Livery is in the body texture; white paint keeps it untinted.
+  'mustang-gt3':{worldOnly:true,asset:'streetscape/mustang-gt3.glb',length:5.06,width:2.05,height:1.41,paint:0xffffff,power:8.2,top:47,wheelbase:2.78,mass:1300},
   rally:{asset:'streetscape/rally-car.glb',length:4.25,paint:0x246397,power:7.7,top:40},
   'family-sedan':{
     worldOnly:true,asset:'streetscape/sedan.json.gz',length:4.58,width:1.80,height:1.45,paint:0x7194a7,

@@ -71,14 +71,21 @@ async function checkPhoneRotation(page, driving) {
       await page.setViewportSize({width,height});
       await page.waitForFunction(([w,h]) => window.innerWidth === w && window.innerHeight === h, [width,height]);
       for (const hand of driving ? ['left','right'] : ['left']) {
-        const collisions = await page.evaluate(({driving,hand}) => {
+        const collisions = await page.evaluate(async ({driving,hand}) => {
           if (driving) Object.assign(document.body.dataset, {steering:hand,buttonSize:'large',mapSize:'large'});
           const selectors = driving
             ? ['#viewTools button','.tools button','.navigationDock','.routeInfo','.telemetry','#touch button']
             : ['header nav','.departureRibbon','.openingCopy','.atlasTicket'];
-          const boxes = [...document.querySelectorAll(selectors.join(','))]
-            .map(el => [el.id || el.className || el.dataset.key, el.getBoundingClientRect()])
-            .filter(([,r]) => r.width && r.height);
+          // The portrait departure panel scrolls above the navigation bar.
+          // Measure each control after clipping by its scroll container and viewport.
+          const controls = [...document.querySelectorAll(selectors.join(','))];
+          const entries = await new Promise(resolve => {
+            const observer = new IntersectionObserver(entries => { observer.disconnect(); resolve(entries); });
+            controls.forEach(el => observer.observe(el));
+            if (!controls.length) resolve([]);
+          });
+          const boxes = entries.filter(e => e.intersectionRect.width && e.intersectionRect.height)
+            .map(({target,intersectionRect}) => [target.id || target.className || target.dataset.key || target.tagName, intersectionRect]);
           return boxes.flatMap(([id,r],i) => boxes.slice(i+1).filter(([,s]) =>
             r.left < s.right && s.left < r.right && r.top < s.bottom && s.top < r.bottom
           ).map(([other]) => [id,other]));

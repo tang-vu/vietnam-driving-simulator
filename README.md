@@ -32,6 +32,8 @@ Mỗi điểm ngắm có một con dấu bí mật. Ở Tháp Rùa, hãy để �
 
 Từ Ba Sao, theo quốc lộ 21 đến con đường ven hồ Tam Chúc dưới chân núi đá vôi. Chặng này dài 5,4 km. Tới nơi, bạn có thể dừng xe, mở **Ngắm Tam Chúc** và chọn một trong tám công trình để nhìn gần hơn. [Lái từ Ba Sao đến Tam Chúc](https://vivu3d.com/?drive=ba-sao-tam-chuc).
 
+Ở Hải Phòng, xuất phát trên đê biển Tiên Lãng lúc hoàng hôn, qua cầu Văn Úc rồi theo đê biển Kiến Thụy vào Đồ Sơn. Chặng lái dài 34,4 km và kết thúc trên bờ, cách hải đăng trên đảo Hòn Dấu khoảng 1,4 km. Hàng phi lao, nhà và đèn ven tuyến là cảnh minh họa. [Lái dọc bờ biển Hải Phòng](https://vivu3d.com/?drive=ven-bien-hon-dau).
+
 Ở Bà Nà, bạn nhận xe cạnh lối đi bộ phía ga Marseille. Từ đây có thể lái xuống núi hoặc xoay góc nhìn để ngắm hai bàn tay nâng Cầu Vàng. Nếu thích phố xá, thử khởi hành ở Chợ Vinh. [Ngắm Cầu Vàng](https://vivu3d.com/?landmark=cau-vang-ba-na) · [Ghé Chợ Vinh](https://vivu3d.com/?landmark=cho-vinh).
 
 Atlas có hơn 11.000 điểm tham quan trên 34 tỉnh, thành. Bạn có thể tìm theo tên đường, địa danh hoặc địa chỉ như **48 Hàng Ngang, Hà Nội**. Xe xuất phát ở đường ô tô gần điểm đã chọn. Một số địa danh có mô hình 3D và ảnh thực địa để đối chiếu khi ngắm cảnh. [Tìm điểm xuất phát](https://vivu3d.com/?search=Ba%20Sao) · [Tư liệu địa danh](dist/landmark-references.txt).

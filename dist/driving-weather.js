@@ -38,8 +38,20 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
     el.textContent=(reference?reference+' · ':'')+(afterRain?'Sau mưa mô phỏng':'Mưa mô phỏng');
     el.title=afterRain?'Chuyến lái sau cơn mưa mô phỏng':'Chuyến lái dưới mưa mô phỏng';
   }
-  async function locate(lon,lat){
+  // An authored drive can stage its own sky. Live conditions resume when it ends.
+  let staged=null;
+  function stage(sky){
     if(rainDemo||afterRain)return;
+    sky=sky==='sunset'?sky:null;
+    if(sky===staged)return;
+    staged=sky;due=0;
+    request?.abort();request=null;
+    if(sky==='sunset')for(const el of labels){
+      el.textContent=(reference?reference+' · ':'')+'Hoàng hôn mô phỏng · Trời quang';el.title='Bầu trời hoàng hôn của tuyến lái';
+    }else if(!rainDemo&&!afterRain)display(current,current?'cache':'Đang lấy thời tiết…');
+  }
+  async function locate(lon,lat){
+    if(rainDemo||afterRain||staged)return;
     const now=Date.now(),moved=!point||Math.hypot((point.lon-lon)*Math.cos(lat*Math.PI/180),point.lat-lat)>.04;
     if(!moved&&now<due)return;
     if(request)request.abort();
@@ -81,9 +93,9 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
   function render(camera,now,dawn=0,worldLighting,sheltered=false,cabin=null,truck=false,speed=0){
     const elapsed=lastFrame?Math.max(0,(now-lastFrame)/1000):0;
     const mix=1-Math.exp(-Math.min(.2,elapsed)*2);lastFrame=now;
-    const c=current,code=c?.weather_code||0,night=c&&c.is_day===0;
+    const c=staged?null:current,code=c?.weather_code||0,night=c&&c.is_day===0;
     const wet=rainDemo ? .84 : c?(1-dawn)*Math.min(1,Math.max(c.precipitation*1.8,code>=51?.24:0)):0;
-    const cloud=rainDemo ? .88 : afterRain ? .42 : (c?.cloud_cover||0)/100*(1-dawn),fog=(code===45||code===48)?1-dawn:0;
+    const cloud=rainDemo ? .88 : afterRain ? .42 : staged==='sunset' ? .1 : (c?.cloud_cover||0)/100*(1-dawn),fog=(code===45||code===48)?1-dawn:0;
     const snow=[71,73,75,77,85,86].includes(code),liquid=snow?0:wet;
     retain(moisture.asphalt,wet,elapsed,.9,85);
     retain(moisture.soil,wet,elapsed,6,440);
@@ -124,5 +136,5 @@ function createDrivingWeather(THREE,scene,sun,pavement,reference=''){
     }
     positions.needsUpdate=true;
   }
-  return {locate,render,moisture,get rainfall(){return opacity;}};
+  return {locate,render,moisture,stage,get rainfall(){return opacity;}};
 }
